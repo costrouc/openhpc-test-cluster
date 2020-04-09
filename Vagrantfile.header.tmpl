@@ -3,13 +3,15 @@ Vagrant.configure("2") do |config|
     config.vm.box_version = "1902.01"
 
     config.vm.define "sms", primary: true do |sms|
-      sms.vm.provider "virtualbox" do |vboxsms|
-        vboxsms.memory = 2048
-        vboxsms.cpus = 2
+      sms.vm.provider "libvirt" do |libvirtsms|
+        libvirtsms.memory = 2048
+        libvirtsms.cpus = 2
       end
-      sms.vm.network "private_network",
-                     ip: "192.168.7.2",
-                     virtualbox__intnet: "provisioning"
+
+      sms.vm.network "private_network", ip: "192.168.7.2",
+                     :network_name => "cluster0",
+                     :libvirt__dhcp_enabled => false
+
       sms.vm.provision "shell", inline: "echo sms.localdomain > /etc/hostname"
       sms.vm.provision "shell", inline: "echo 192.168.7.2 sms sms.localdomain >> /etc/hosts"
       sms.vm.provision "shell", inline: "yum -y install http://build.openhpc.community/OpenHPC:/1.3/CentOS_7/x86_64/ohpc-release-1.3-1.el7.x86_64.rpm"
@@ -20,4 +22,3 @@ Vagrant.configure("2") do |config|
       sms.vm.provision "shell", inline: "setenforce 0", run: "always"
       sms.vm.provision "shell", inline: "hostname sms.localdomain", run: "always"
     end
-

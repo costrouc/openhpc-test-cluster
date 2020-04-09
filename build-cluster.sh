@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 NCOMPUTES="$1"
 if [ -z "$NCOMPUTES" ] || [ "$NCOMPUTES" -lt 1 ] || [ "$NCOMPUTES" -gt 10 ]; then
@@ -17,23 +17,15 @@ EOF`
     COMPUTE_DEFS+=$'\n'
     VAGRANT_DEFS+=`cat <<EOF
     config.vm.define "c$i", autostart: false do |c$i|
-      c$i.vm.provider "virtualbox" do |vboxc$i|
-        vboxc$i.memory = 2048
-        vboxc$i.cpus = 1
-        # Enable if you need to debug PXE.
-        #vboxc$i.gui = 'true'
-        vboxc$i.customize [
-          'modifyvm', :id,
-          '--nic1', 'intnet',
-          '--intnet1', 'provisioning',
-          '--boot1', 'net',
-          '--boot2', 'none',
-          '--boot3', 'none',
-          '--boot4', 'none',
-          '--macaddress1', '221a2b0000$((i-1))$((i-1))'
-        ]
+      c$i.vm.network :private_network, :mac => "221a2b0000$((i-1))$((i-1))",
+                     :model_type => "rtl8139",
+                     :network_name => "cluster0"
+
+      c$i.vm.provider "libvirt" do |libvirtc$i|
+        libvirtc$i.memory = 2048
+        libvirtc$i.cpus = 1
+        libvirtc$i.boot 'network'
       end
-      c$i.vm.boot_timeout = 10
     end
 EOF`
     VAGRANT_DEFS+=$'\n'
